@@ -18,5 +18,5 @@ public interface MessageRepository extends JpaRepository<Message, Integer> {
     Optional<Message> findByMessageId(Integer messageId);
 
     @Query("DELETE FROM Message m WHERE m.messageId = :messageId")
-    int deleteByMessageId(@Param("messageId") Integer messageId);
+    Integer deleteByMessageId(@Param("messageId") Integer messageId);
 }
