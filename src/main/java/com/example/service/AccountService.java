@@ -23,6 +23,6 @@ public class AccountService {
     }
 
     public List<Message> getMessagesByAccountId(Integer accountId) {
-        return messageRepository.findAllMessagesByAccountId(accountId);
+        return messageRepository.findAllMessagesByPostedBy(accountId);
     }
 }
