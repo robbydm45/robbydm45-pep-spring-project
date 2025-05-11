@@ -4,8 +4,11 @@ import com.example.repository.MessageRepository;
 import java.util.List;
 import java.util.Optional;
 
+import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap.Option;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.entity.*;
 
@@ -33,6 +36,13 @@ public class MessageService {
         }
     }
 
+    @Modifying
+    public Message addMessage(Message message) {
+        Message addedMessage = messageRepository.save(message);
+        return addedMessage;
+    }
+
+    @Transactional
     public Integer deleteMessageById(Integer messageId) {
         Optional<Message> optionalMessage = messageRepository.findByMessageId(messageId);
         if (optionalMessage.isPresent()) {

@@ -8,8 +8,11 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.Message;
@@ -44,6 +47,15 @@ public class SocialMediaController {
         return ResponseEntity.status(200).body(messageService.getMessageById(messageId));
     }
 
+    @PostMapping("/messages")
+    public ResponseEntity<Message> addNewMessage(@RequestBody Message message) {
+        if (!message.getMessageText().isBlank() && message.getMessageText().length() < 255) {
+            return ResponseEntity.status(200).body(messageService.addMessage(message));
+        } else {
+            return ResponseEntity.status(400).build();
+        }
+    }
+
     @PatchMapping("/messages/{messageId}")
     public ResponseEntity<String> patchMessage(@PathVariable Integer messageId) {
         return null; //ResponseEntity.status(200).body();
@@ -53,7 +65,6 @@ public class SocialMediaController {
     public ResponseEntity<Integer> deleteMessageById(@PathVariable Integer messageId) {
         return ResponseEntity.status(200).body(messageService.deleteMessageById(messageId));
     }
-
 
     @GetMapping("/accounts/{accountId}/messages")
     public ResponseEntity<List<Message>> getMessagesByAccountId(@PathVariable("accountId") Integer accountId) {
