@@ -31,6 +31,15 @@ public class AccountService {
         return newAccount;
     }
 
+    public boolean validAccount(Integer accountId) {
+        Optional<Account> isValid = accountRepository.findAccountByAccountId(accountId);
+        if (isValid.isPresent()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public Account accountLogin(Account account) {
         Optional<Account> validAccount = accountRepository.findAccountByUsernameAndPassword(account.getUsername(), account.getPassword());
         if (validAccount.isPresent()) {

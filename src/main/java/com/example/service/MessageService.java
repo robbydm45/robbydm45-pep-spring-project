@@ -1,6 +1,5 @@
 package com.example.service;
 
-import com.example.repository.*;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.entity.*;
+import com.example.repository.*;
 
 @Service
 public class MessageService {
@@ -28,8 +28,7 @@ public class MessageService {
     public Message getMessageById(Integer messageId) {
         Optional<Message> optionalMessage = messageRepository.findById(messageId);
         if (optionalMessage.isPresent()) {
-            Message message = optionalMessage.get();
-            return message;
+            return optionalMessage.get();
         } else {
             return null;
         }
@@ -41,9 +40,22 @@ public class MessageService {
         return addedMessage;
     }
 
+    @Modifying
+    public Integer updateMessage(Integer messageId, Message message) {
+        Optional<Message> optionalMessage = messageRepository.findMessageByMessageId(messageId);
+        if (optionalMessage.isPresent()) {
+            Message updatedMessage = optionalMessage.get();
+            updatedMessage.setMessageText(message.getMessageText());
+            messageRepository.save(updatedMessage);
+            return 1;
+        } else {
+            return null;
+        }
+    }
+
     @Transactional
     public Integer deleteMessageById(Integer messageId) {
-        Optional<Message> optionalMessage = messageRepository.findByMessageId(messageId);
+        Optional<Message> optionalMessage = messageRepository.findMessageByMessageId(messageId);
         if (optionalMessage.isPresent()) {
             Integer rowsDeleted = messageRepository.deleteByMessageId(messageId);
             return rowsDeleted;

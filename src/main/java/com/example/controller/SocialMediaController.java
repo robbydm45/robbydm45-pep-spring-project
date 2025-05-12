@@ -1,9 +1,6 @@
 package com.example.controller;
 
-
-import java.lang.StackWalker.Option;
 import java.util.List;
-
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -51,7 +47,7 @@ public class SocialMediaController {
 
     @PostMapping("/messages")
     public ResponseEntity<Message> addNewMessage(@RequestBody Message message) {
-        if (!message.getMessageText().isBlank() && message.getMessageText().length() < 255) {
+        if (!message.getMessageText().isBlank() && message.getMessageText().length() < 255 && accountService.validAccount(message.getPostedBy())) {
             return ResponseEntity.status(200).body(messageService.addMessage(message));
         } else {
             return ResponseEntity.status(400).build();
@@ -59,8 +55,12 @@ public class SocialMediaController {
     }
 
     @PatchMapping("/messages/{messageId}")
-    public ResponseEntity<String> patchMessage(@PathVariable Integer messageId) {
-        return null; //ResponseEntity.status(200).body();
+    public ResponseEntity<Integer> updateMessage(@PathVariable Integer messageId, @RequestBody Message message) {
+        if (!message.getMessageText().isBlank() && message.getMessageText().length() < 255 && messageService.getMessageById(messageId) != null) {
+            return ResponseEntity.status(200).body(messageService.updateMessage(messageId, message));
+        } else {
+            return ResponseEntity.status(400).build();
+        }
     }
 
     @DeleteMapping("/messages/{messageId}")
