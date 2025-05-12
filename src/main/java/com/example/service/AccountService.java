@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.entity.Message;
+import com.example.entity.*;
 import com.example.repository.AccountRepository;
 import com.example.repository.MessageRepository;
 
@@ -24,5 +24,19 @@ public class AccountService {
 
     public List<Message> getMessagesByAccountId(Integer accountId) {
         return messageRepository.findAllMessagesByPostedBy(accountId);
+    }
+
+    public Account registerUser(Account account) {
+        Account newAccount = accountRepository.save(account);
+        return newAccount;
+    }
+
+    public Account accountLogin(Account account) {
+        Optional<Account> validAccount = accountRepository.findAccountByUsernameAndPassword(account.getUsername(), account.getPassword());
+        if (validAccount.isPresent()) {
+            return validAccount.get();
+        } else {
+            return null;
+        }
     }
 }

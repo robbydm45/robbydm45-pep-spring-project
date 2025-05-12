@@ -1,7 +1,9 @@
 package com.example.controller;
 
 
+import java.lang.StackWalker.Option;
 import java.util.List;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +16,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import com.example.entity.Message;
-import com.example.service.AccountService;
-import com.example.service.MessageService;
+import com.example.entity.*;
+import com.example.service.*;
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller using Spring. The endpoints you will need can be
@@ -64,6 +66,30 @@ public class SocialMediaController {
     @DeleteMapping("/messages/{messageId}")
     public ResponseEntity<Integer> deleteMessageById(@PathVariable Integer messageId) {
         return ResponseEntity.status(200).body(messageService.deleteMessageById(messageId));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Account> registerUser(@RequestBody Account account) {
+
+        Account validAccount = accountService.accountLogin(account);
+        
+        if (!account.getUsername().isBlank() && account.getPassword().length() > 4 && validAccount == null) {
+            return ResponseEntity.status(200).body(accountService.registerUser(account));
+        } else if (validAccount != null) {
+            return ResponseEntity.status(409).build();
+        } else {
+            return ResponseEntity.status(400).build();
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Account> accountLogin(@RequestBody Account account) {
+        Account validAccount = accountService.accountLogin(account);
+        if (validAccount != null) {
+            return ResponseEntity.status(200).body(validAccount);
+        } else {
+            return ResponseEntity.status(401).build();
+        }
     }
 
     @GetMapping("/accounts/{accountId}/messages")
