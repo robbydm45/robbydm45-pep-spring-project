@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.example.entity.*;
 import com.example.service.*;
@@ -29,22 +28,47 @@ public class SocialMediaController {
     private AccountService accountService;
     private MessageService messageService;
 
+    /*
+     * Constructor method.
+     * 
+     * @param accountService an account service object.
+     * @param messageService a message service object.
+     */
     @Autowired
     public SocialMediaController(AccountService accountService, MessageService messageService) {
         this.accountService = accountService;
         this.messageService = messageService;
     }
 
+    /*
+     * Method to handle get all message request.
+     * 
+     * @return a reponse entity with list of messages as the response body and http status 200.
+     */
    @GetMapping("/messages")
     public ResponseEntity<List<Message>> getAllMessages() {
         return ResponseEntity.status(200).body(messageService.getAllMessages());
     }
 
+    /*
+     * Method to handle get message by id request.
+     * 
+     * @param messageId the id of the message taken from http path.
+     * @return a response entity with the specified message in the response body and http status 200.
+     */
     @GetMapping("/messages/{messageId}")
     public ResponseEntity<Message> getMessageById(@PathVariable Integer messageId) {
         return ResponseEntity.status(200).body(messageService.getMessageById(messageId));
     }
 
+    /*
+     * Method to handle the creation of new message requests. Method checks if the message text is not blank,
+     * the length of the text does not exceed 255 characters, as well as the account is valid.
+     * 
+     * @param message the new message to save.
+     * @return a repsonse entity with the new message in the response body with http status 200,
+     *         or a http status of 400 if the message did not meet the above criteria.
+     */
     @PostMapping("/messages")
     public ResponseEntity<Message> addNewMessage(@RequestBody Message message) {
         if (!message.getMessageText().isBlank() && message.getMessageText().length() < 255 && accountService.validAccount(message.getPostedBy())) {
@@ -54,6 +78,16 @@ public class SocialMediaController {
         }
     }
 
+    /*
+     * Method to handle a message patch request. Since the request body may only contain the updated text, the 
+     * separate messageId param is needed. The method checks if the message is blank, the length of the text is less than 255
+     * characters and that the message does exist in the database.
+     * 
+     * @param messageId the id of the message to update.
+     * @param message the updated message text.
+     * @return a reponse entity with the update message in the response body and http status 200, or just the entity with status 
+     *          of 400 if the above criteria did not pass.
+     */
     @PatchMapping("/messages/{messageId}")
     public ResponseEntity<Integer> updateMessage(@PathVariable Integer messageId, @RequestBody Message message) {
         if (!message.getMessageText().isBlank() && message.getMessageText().length() < 255 && messageService.getMessageById(messageId) != null) {
@@ -63,11 +97,25 @@ public class SocialMediaController {
         }
     }
 
+    /*
+     * Method to handle message delete requests.
+     * 
+     * @param messageId the id of the message to delete.
+     * @return a response entity with the number of rows deleted and the http status 200.
+     */
     @DeleteMapping("/messages/{messageId}")
     public ResponseEntity<Integer> deleteMessageById(@PathVariable Integer messageId) {
         return ResponseEntity.status(200).body(messageService.deleteMessageById(messageId));
     }
 
+    /*
+     * Method to handle registering new account request. Method checks if the username is not blank, if the password is 
+     * greater than 4 characters long and that the account does not already exist.
+     * 
+     * @param account a account object
+     * @return a reponse entity with the newly created account object as the response body with http status 200, or if the 
+     *          account exists, returns http status of 409, or if the other criteria is not met, a http status of 400.
+     */
     @PostMapping("/register")
     public ResponseEntity<Account> registerUser(@RequestBody Account account) {
 
@@ -82,6 +130,13 @@ public class SocialMediaController {
         }
     }
 
+    /*
+     * Method to handle login request.
+     * 
+     * @param account an account object
+     * @return a response entity with the account as the response body with http status 200, or if the account does not exist,
+     *          an empty response body with http status 401.
+     */
     @PostMapping("/login")
     public ResponseEntity<Account> accountLogin(@RequestBody Account account) {
         Account validAccount = accountService.accountLogin(account);
@@ -92,9 +147,16 @@ public class SocialMediaController {
         }
     }
 
+    /*
+     * Method to handle requests to retrive messages using an account id.
+     * 
+     * @param accountId the account id to look up messages by.
+     * @return a response entity with a list of all the messages of the specified account as the response body and https status 200.
+     */
     @GetMapping("/accounts/{accountId}/messages")
     public ResponseEntity<List<Message>> getMessagesByAccountId(@PathVariable("accountId") Integer accountId) {
         List<Message> messageList = accountService.getMessagesByAccountId(accountId);
         return ResponseEntity.status(200).body(messageList);
     }
+
 }

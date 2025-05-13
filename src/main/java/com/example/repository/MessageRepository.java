@@ -10,14 +10,10 @@ import com.example.entity.Message;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Integer> {
-
+    
     List<Message> findAll();
-
     Optional<Message> findMessageByMessageId(Integer messageId);
-
-    Message save(Message message);
-
     List<Message> findAllMessagesByPostedBy(Integer postedBy);
-
+    Message save(Message message);
     Integer deleteByMessageId(Integer messageId);
 }
