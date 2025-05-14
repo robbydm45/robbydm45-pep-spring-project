@@ -3,17 +3,13 @@ package com.example.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.h2.security.auth.AuthenticationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.entity.*;
-import com.example.exception.BlankMessageException;
-import com.example.exception.InvalidAccountException;
-import com.example.exception.InvalidMessageIdException;
-import com.example.exception.MessageLengthException;
+import com.example.exception.*;
 import com.example.repository.*;
 
 @Service
@@ -59,19 +55,21 @@ public class MessageService {
     }
 
     /*
-     * Mehthod to save message to database.
+     * Mehthod to save message to database. Method checks if the message text is not blank, if the message text is less than
+     * 255 characters, and if the account exists in the database.
      * 
      * @param message the message to save.
      * @return the saved message including the generated message id.
+     * @throws BlankMessageException, MessageLengthExcpetion, InvalidAccountException
      */
     @Modifying
     public Message addMessage(Message message) throws BlankMessageException, MessageLengthException, InvalidAccountException {
         if (message.getMessageText().isBlank()) {
-            throw new BlankMessageException();
+            throw new BlankMessageException("Message text should not be blank.");
         } else if(message.getMessageText().length() > 255) {
-            throw new MessageLengthException();
+            throw new MessageLengthException("Message must be less than 255 characters.");
         } else if(!accountService.validAccount(message.getPostedBy())) {
-            throw new InvalidAccountException();
+            throw new InvalidAccountException("The username, " + message.getPostedBy() + " could not be found. Please try again.");
         } else {
             Message addedMessage = messageRepository.save(message);
             return addedMessage;
@@ -79,18 +77,20 @@ public class MessageService {
     }
 
     /*
-     * Method to update a message given the message id.
+     * Method to update a message given the message id. Method checks if the message text is blank, if the message text
+     * is lessa than 255 characters, and if the messageId already exists in the database.
      * 
      * @param messageId the message id in which to update.
      * @param message the updated message.
      * @return 1 if the message saved properly or otherwise null.
+     * @throws BlankMessageException, MessageLengthException, InvalidMessageIdException
      */
     @Modifying
-    public Integer updateMessage(Integer messageId, Message message) throws BlankMessageException, MessageLengthException, InvalidMessageIdException{
+    public Integer updateMessage(Integer messageId, Message message) throws BlankMessageException, MessageLengthException, InvalidMessageIdException {
         if (message.getMessageText().isBlank()) {
-            throw new BlankMessageException();
+            throw new BlankMessageException("Message text should not be blank.");
         } else if (message.getMessageText().length() > 255) {
-            throw new MessageLengthException();
+            throw new MessageLengthException("Message must be less than 255 characters.");
         } else {
             Optional<Message> optionalMessage = messageRepository.findMessageByMessageId(messageId);
             if (optionalMessage.isPresent()) {
@@ -99,7 +99,7 @@ public class MessageService {
                 messageRepository.save(updatedMessage);
                 return 1;
             } else {
-                throw new InvalidMessageIdException();
+                throw new InvalidMessageIdException("The message with id: " + messageId + " does not exist.");
             }
         }
     }

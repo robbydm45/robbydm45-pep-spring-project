@@ -14,11 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.*;
-import com.example.exception.BlankMessageException;
-import com.example.exception.InvalidAccountException;
-import com.example.exception.InvalidMessageIdException;
-import com.example.exception.MessageLengthException;
 import com.example.service.*;
+import com.example.exception.*;
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller using Spring. The endpoints you will need can be
@@ -70,11 +67,10 @@ public class SocialMediaController {
      * Method to handle the creation of new message requests.
      * 
      * @param message the new message to save.
-     * @return a repsonse entity with the new message in the response body with http status 200,
-     *         or a http status of 400 if the message did not meet the above criteria.
+     * @return a repsonse entity with the new message in the response body with http status 200.
      */
     @PostMapping("/messages")
-    public ResponseEntity<Message> addNewMessage(@RequestBody Message message) throws BlankMessageException, MessageLengthException, InvalidAccountException{
+    public ResponseEntity<Message> addNewMessage(@RequestBody Message message) {
         return ResponseEntity.status(200).body(messageService.addMessage(message));
     }
 
@@ -83,8 +79,7 @@ public class SocialMediaController {
      * 
      * @param messageId the id of the message to update.
      * @param message the updated message text.
-     * @return a reponse entity with the update message in the response body and http status 200, or just the entity with status 
-     *          of 400 if the above criteria did not pass.
+     * @return a reponse entity with the update message in the response body and http status 200.
      */
     @PatchMapping("/messages/{messageId}")
     public ResponseEntity<Integer> updateMessage(@PathVariable Integer messageId, @RequestBody Message message) {
@@ -103,42 +98,25 @@ public class SocialMediaController {
     }
 
     /*
-     * Method to handle registering new account request. Method checks if the username is not blank, if the password is 
-     * greater than 4 characters long and that the account does not already exist.
+     * Method to handle registering new account request. 
      * 
      * @param account a account object
-     * @return a reponse entity with the newly created account object as the response body with http status 200, or if the 
-     *          account exists, returns http status of 409, or if the other criteria is not met, a http status of 400.
+     * @return a reponse entity with the newly created account object as the response body with http status 200.
      */
     @PostMapping("/register")
     public ResponseEntity<Account> registerUser(@RequestBody Account account) {
-
-        Account validAccount = accountService.accountLogin(account);
-        
-        if (!account.getUsername().isBlank() && account.getPassword().length() > 4 && validAccount == null) {
-            return ResponseEntity.status(200).body(accountService.registerUser(account));
-        } else if (validAccount != null) {
-            return ResponseEntity.status(409).build();
-        } else {
-            return ResponseEntity.status(400).build();
-        }
+        return ResponseEntity.status(200).body(accountService.registerUser(account));
     }
 
     /*
      * Method to handle login request.
      * 
      * @param account an account object
-     * @return a response entity with the account as the response body with http status 200, or if the account does not exist,
-     *          an empty response body with http status 401.
+     * @return a response entity with the account as the response body with http status 200.
      */
     @PostMapping("/login")
     public ResponseEntity<Account> accountLogin(@RequestBody Account account) {
-        Account validAccount = accountService.accountLogin(account);
-        if (validAccount != null) {
-            return ResponseEntity.status(200).body(validAccount);
-        } else {
-            return ResponseEntity.status(401).build();
-        }
+        return ResponseEntity.status(200).body(accountService.accountLogin(account));
     }
 
     /*
@@ -154,28 +132,62 @@ public class SocialMediaController {
     }
 
     /*
-     * Method to hanldle BlankMethodExceptions
+     * Method to handle BlankMethod exceptions.
      * 
-     * @return
+     * @return ResponseEntity with http status 400 and exception text in reponse body.
      */
     @ExceptionHandler(BlankMessageException.class)
-    public ResponseEntity<Error> handleBlankMessageException() {
-        return ResponseEntity.status(400).build();
+    public ResponseEntity<BlankMessageException> handleBlankMessageException(BlankMessageException ex) {
+        return ResponseEntity.status(400).body(ex);
     }
 
+    /*
+     * Method to handle MessageLength exceptions.
+     * 
+     * @return ResponseEntity with http status 400 and exception text in reponse body.
+     */
     @ExceptionHandler(MessageLengthException.class)
-    public ResponseEntity<Error> handleMessageLengthException() {
-        return ResponseEntity.status(400).build();
+    public ResponseEntity<MessageLengthException> handleMessageLengthException(MessageLengthException ex) {
+        return ResponseEntity.status(400).body(ex);
     }
 
+    /*
+     * Method to handle InvalidMessageId exceptions.
+     * 
+     * @return ResponseEntity with http status 400 and exception text in reponse body.
+     */
     @ExceptionHandler(InvalidMessageIdException.class)
-    public ResponseEntity<Error> handleInvalidMessageIdException() {
-        return ResponseEntity.status(400).build();
+    public ResponseEntity<InvalidMessageIdException> handleInvalidMessageIdException(InvalidMessageIdException ex) {
+        return ResponseEntity.status(400).body(ex);
     }
 
+    /*
+     * Method to handle InvalidAccount exceptions.
+     * 
+     * @return ResponseEntity with http status 400 and exception text in reponse body.
+     */
     @ExceptionHandler(InvalidAccountException.class)
-    public ResponseEntity<Error> handleInvalidAccountException() {
-        return ResponseEntity.status(400).build();
+    public ResponseEntity<InvalidAccountException> handleInvalidAccountException(InvalidAccountException ex) {
+        return ResponseEntity.status(400).body(ex);
     }
 
+    /*
+     * Method to handle DuplicateUsername exceptions.
+     * 
+     * @return ResponseEntity with http status 409 and exception text in reponse body.
+     */
+    @ExceptionHandler(DuplicateUsernameException.class)
+    public ResponseEntity<DuplicateUsernameException> handleDuplicateUsernameException(DuplicateUsernameException ex) {
+        return ResponseEntity.status(409).body(ex);
+    }
+
+    /*
+     * Method to handle UnauthorizedUser exceptions.
+     * 
+     * @return ResponseEntity with http status 401 and exception text in reponse body.
+     */
+    @ExceptionHandler(UnauthorizedUserException.class)
+    public ResponseEntity<UnauthorizedUserException> handleUnauthorizedUserException(UnauthorizedUserException ex) {
+        return ResponseEntity.status(401).body(ex);
+    }
 }

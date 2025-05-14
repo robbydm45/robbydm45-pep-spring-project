@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.entity.*;
-import com.example.repository.AccountRepository;
-import com.example.repository.MessageRepository;
+import com.example.exception.*;
+import com.example.repository.*;
 
 @Service
 public class AccountService {
@@ -39,14 +39,25 @@ public class AccountService {
     }
 
     /*
-     * Method to register a new user and save to database.
+     * Method to register a new user and save to database. Method checks if the username field is blank, if the password is less
+     * than 4 characters long, and if the username already exists in the database.
      * 
      * @param account an account object.
      * @return the saved account.
+     * @throws BlankMessageException, PasswordCriteriaException, DuplicateUsernameException
      */
-    public Account registerUser(Account account) {
-        Account newAccount = accountRepository.save(account);
-        return newAccount;
+    public Account registerUser(Account account) throws BlankMessageException, PasswordCriteriaException, DuplicateUsernameException {
+        Optional<Account> validAccount = accountRepository.findAccountByUsername(account.getUsername());
+        if (account.getUsername().isBlank()) {
+            throw new BlankMessageException("The username field is blank. Please enter a username.");
+        } else if (account.getPassword().length() < 4) {
+            throw new PasswordCriteriaException("The password entered must be more than 4 characters in length.");
+        } else if (validAccount.isPresent() && !validAccount.get().equals(null)) {
+            throw new DuplicateUsernameException("Username already exists.");
+        } else {
+            Account newAccount = accountRepository.save(account);
+            return newAccount;
+        }
     }
 
     /*
@@ -65,17 +76,19 @@ public class AccountService {
     }
 
     /*
-     * Method for logging in a user using an account object.
+     * Method for logging in a user using an account object. If the username and password do not match in the database,
+     * an exception is thrown.
      * 
      * @param account an account object.
      * @return the valid account or null if not found.
+     * @throws UnauthorizedUserException
      */
-    public Account accountLogin(Account account) {
+    public Account accountLogin(Account account) throws UnauthorizedUserException {
         Optional<Account> validAccount = accountRepository.findAccountByUsernameAndPassword(account.getUsername(), account.getPassword());
         if (validAccount.isPresent()) {
             return validAccount.get();
         } else {
-            return null;
+            throw new UnauthorizedUserException("The username and/or password is incorrect.");
         }
     }
 }
