@@ -3,18 +3,24 @@ package com.example.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.h2.security.auth.AuthenticationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.entity.*;
+import com.example.exception.BlankMessageException;
+import com.example.exception.InvalidAccountException;
+import com.example.exception.InvalidMessageIdException;
+import com.example.exception.MessageLengthException;
 import com.example.repository.*;
 
 @Service
 public class MessageService {
 
     private MessageRepository messageRepository;
+    private AccountService accountService;
 
     /*
      * MessageService constructor. 
@@ -22,8 +28,9 @@ public class MessageService {
      * @param messageRepository a message repository object.
      */
     @Autowired
-    public MessageService(MessageRepository messageRepository) {
+    public MessageService(MessageRepository messageRepository, AccountService accountService) {
         this.messageRepository = messageRepository;
+        this.accountService = accountService;
     }
 
     /*
@@ -48,6 +55,7 @@ public class MessageService {
         } else {
             return null;
         }
+        
     }
 
     /*
@@ -57,9 +65,17 @@ public class MessageService {
      * @return the saved message including the generated message id.
      */
     @Modifying
-    public Message addMessage(Message message) {
-        Message addedMessage = messageRepository.save(message);
-        return addedMessage;
+    public Message addMessage(Message message) throws BlankMessageException, MessageLengthException, InvalidAccountException {
+        if (message.getMessageText().isBlank()) {
+            throw new BlankMessageException();
+        } else if(message.getMessageText().length() > 255) {
+            throw new MessageLengthException();
+        } else if(!accountService.validAccount(message.getPostedBy())) {
+            throw new InvalidAccountException();
+        } else {
+            Message addedMessage = messageRepository.save(message);
+            return addedMessage;
+        }
     }
 
     /*
@@ -70,15 +86,21 @@ public class MessageService {
      * @return 1 if the message saved properly or otherwise null.
      */
     @Modifying
-    public Integer updateMessage(Integer messageId, Message message) {
-        Optional<Message> optionalMessage = messageRepository.findMessageByMessageId(messageId);
-        if (optionalMessage.isPresent()) {
-            Message updatedMessage = optionalMessage.get();
-            updatedMessage.setMessageText(message.getMessageText());
-            messageRepository.save(updatedMessage);
-            return 1;
+    public Integer updateMessage(Integer messageId, Message message) throws BlankMessageException, MessageLengthException, InvalidMessageIdException{
+        if (message.getMessageText().isBlank()) {
+            throw new BlankMessageException();
+        } else if (message.getMessageText().length() > 255) {
+            throw new MessageLengthException();
         } else {
-            return null;
+            Optional<Message> optionalMessage = messageRepository.findMessageByMessageId(messageId);
+            if (optionalMessage.isPresent()) {
+                Message updatedMessage = optionalMessage.get();
+                updatedMessage.setMessageText(message.getMessageText());
+                messageRepository.save(updatedMessage);
+                return 1;
+            } else {
+                throw new InvalidMessageIdException();
+            }
         }
     }
 

@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.entity.*;
+import com.example.exception.BlankMessageException;
+import com.example.exception.InvalidAccountException;
+import com.example.exception.InvalidMessageIdException;
+import com.example.exception.MessageLengthException;
 import com.example.service.*;
 
 /**
@@ -23,6 +27,7 @@ import com.example.service.*;
  * refer to prior mini-project labs and lecture materials for guidance on how a controller may be built.
  */
 @RestController
+@ControllerAdvice
 public class SocialMediaController {
 
     private AccountService accountService;
@@ -62,26 +67,19 @@ public class SocialMediaController {
     }
 
     /*
-     * Method to handle the creation of new message requests. Method checks if the message text is not blank,
-     * the length of the text does not exceed 255 characters, as well as the account is valid.
+     * Method to handle the creation of new message requests.
      * 
      * @param message the new message to save.
      * @return a repsonse entity with the new message in the response body with http status 200,
      *         or a http status of 400 if the message did not meet the above criteria.
      */
     @PostMapping("/messages")
-    public ResponseEntity<Message> addNewMessage(@RequestBody Message message) {
-        if (!message.getMessageText().isBlank() && message.getMessageText().length() < 255 && accountService.validAccount(message.getPostedBy())) {
-            return ResponseEntity.status(200).body(messageService.addMessage(message));
-        } else {
-            return ResponseEntity.status(400).build();
-        }
+    public ResponseEntity<Message> addNewMessage(@RequestBody Message message) throws BlankMessageException, MessageLengthException, InvalidAccountException{
+        return ResponseEntity.status(200).body(messageService.addMessage(message));
     }
 
     /*
-     * Method to handle a message patch request. Since the request body may only contain the updated text, the 
-     * separate messageId param is needed. The method checks if the message is blank, the length of the text is less than 255
-     * characters and that the message does exist in the database.
+     * Method to handle a message patch request.
      * 
      * @param messageId the id of the message to update.
      * @param message the updated message text.
@@ -90,11 +88,7 @@ public class SocialMediaController {
      */
     @PatchMapping("/messages/{messageId}")
     public ResponseEntity<Integer> updateMessage(@PathVariable Integer messageId, @RequestBody Message message) {
-        if (!message.getMessageText().isBlank() && message.getMessageText().length() < 255 && messageService.getMessageById(messageId) != null) {
-            return ResponseEntity.status(200).body(messageService.updateMessage(messageId, message));
-        } else {
-            return ResponseEntity.status(400).build();
-        }
+        return ResponseEntity.status(200).body(messageService.updateMessage(messageId, message));
     }
 
     /*
@@ -157,6 +151,31 @@ public class SocialMediaController {
     public ResponseEntity<List<Message>> getMessagesByAccountId(@PathVariable("accountId") Integer accountId) {
         List<Message> messageList = accountService.getMessagesByAccountId(accountId);
         return ResponseEntity.status(200).body(messageList);
+    }
+
+    /*
+     * Method to hanldle BlankMethodExceptions
+     * 
+     * @return
+     */
+    @ExceptionHandler(BlankMessageException.class)
+    public ResponseEntity<Error> handleBlankMessageException() {
+        return ResponseEntity.status(400).build();
+    }
+
+    @ExceptionHandler(MessageLengthException.class)
+    public ResponseEntity<Error> handleMessageLengthException() {
+        return ResponseEntity.status(400).build();
+    }
+
+    @ExceptionHandler(InvalidMessageIdException.class)
+    public ResponseEntity<Error> handleInvalidMessageIdException() {
+        return ResponseEntity.status(400).build();
+    }
+
+    @ExceptionHandler(InvalidAccountException.class)
+    public ResponseEntity<Error> handleInvalidAccountException() {
+        return ResponseEntity.status(400).build();
     }
 
 }
